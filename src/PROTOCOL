@@ -1,0 +1,42 @@
+Publisher
+Sinh dữ liệu sau một khoảng thời gian nhất định
+sinh dữ liệu rồi lưu vào file json trong thư mục topic
+Publish dữ liệu lên Broker
+Subscriber
+Hiển thị số lượng các Publisher có thể đăng ký
+Đăng ký nhận topic từ publisher
+Hiển thị danh sách các topic nhận được từ publisher
+Broker
+nhận kết nối từ Publisher -> nhận và lưu dữ liệu vào 1 folder (hàng đợi)
+nhận kết nối từ Subscriber -> gửi danh sách các publisher có thể đăng ký
+Gửi topic nhận được từ publisher cho các subscriber đã đăng ký nhận topic
+
+
+
+1. Publisher
+Publisher: PUBLISHER HELLO
+Broker: 200 HELLO PUBLISHER
+Publisher: SEND
+Broker: 210 SEND OK
+Publisher: {“topic”:”ROOM_TEMP”,”location”:”KITCHEN”,”sensor1”:”AC”,”value”:”10”,”time”:”10:0:60 10/10/2021”,"path":"ROOM_TEMP/KITCHEN/sensor1"}
+Broker: 220 DATA OK
+Publisher: {“topic”:”ROOM_TEMP”,”location”:”KITCHEN”}
+Broker: 404 DATA ERROR
+
+2. Subscriber
+Subscriber: SUBSCRIBER HELLO
+Broker: 200 HELLO SUBSCRIBER
+Subscriber: TOPIC
+Broker: 1. ROOM_TEMP 2. TV_SWITCH 3. LIGHT_SWITCH
+
+—---Nếu chọn sai—----
+Subscriber: 4, 5		// nếu các id nhập vào có cái không có trong danh sách gửi về
+Broker: 405 TOPIC NOT AVAILABLE
+Subscriber: TOPIC
+Broker: 1. ROOM_TEMP 2. TV_SWITCH 3. LIGHT_SWITCH
+
+
+—---Nếu chọn đúng—----
+Subscriber: 1,2 		// nếu các id nhập vào đều có trong danh sách gửi về thì ok
+Broker: 220 SUBSCRIBE OK
+Broker: {“topic”:”ROOM_TEMP”,”location”:”KITCHEN”,”sensor”:”AC”,”value”:”10”,”time”:”10:0:60 10/10/2021”}
