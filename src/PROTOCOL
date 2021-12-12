@@ -18,7 +18,7 @@ Publisher: PUBLISHER HELLO
 Broker: 200 HELLO PUBLISHER
 Publisher: SEND
 Broker: 210 SEND OK
-Publisher: {“topic”:”ROOM_TEMP”,”location”:”KITCHEN”,”sensor1”:”AC”,”value”:”10”,”time”:”10:0:60 10/10/2021”,"path":"ROOM_TEMP/KITCHEN/sensor1"}
+Publisher: {“topic”:”ROOM_TEMP”,”location”:”KITCHEN”,”sensor”:”sensor1”,”value”:”10”,”time”:”10:0:60 10/10/2021”}
 Broker: 220 DATA OK
 Publisher: {“topic”:”ROOM_TEMP”,”location”:”KITCHEN”}
 Broker: 404 DATA ERROR
