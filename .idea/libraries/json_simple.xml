@@ -1,10 +1,11 @@
 <component name="libraryTable">
   <library name="json-simple">
     <CLASSES>
-      <root url="file://$USER_HOME$/json-simple" />
+      <root url="file://$PROJECT_DIR$/../json-simple" />
+      <root url="file://$PROJECT_DIR$/../Bản tải về/org.eclipse.paho.client.mqttv3-1.2.0" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
-    <jarDirectory url="file://$USER_HOME$/json-simple" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/../json-simple" recursive="false" />
   </library>
 </component>
