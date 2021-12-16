@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 public class Publisher implements Locations, Topics {
     static int PORT_NUMBER = 9000;
 
-    static int randomData(String topic) {
+    private static int randomData(String topic) {
         Random rand = new Random();
         int min;
         int max;
@@ -32,7 +32,7 @@ public class Publisher implements Locations, Topics {
         return rand.nextInt(max - min + 1) + min;
     }
 
-    static String randomLocation() {
+    private static String randomLocation() {
         int min = 0;
         int max = 3;
         Random rand = new Random();
@@ -45,13 +45,13 @@ public class Publisher implements Locations, Topics {
         return BEDROOM;
     }
 
-    static String getCurrentDateTime() {
+    private static String getCurrentDateTime() {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         Date date = new Date();
         return formatter.format(date);
     }
 
-    static String setDataForTopic(String topic) {
+    private static String setDataForTopic(String topic) {
         JSONObject data = new JSONObject();
         String sensor = topic + "_SENSOR";
         data.put("topic", topic);
@@ -61,6 +61,15 @@ public class Publisher implements Locations, Topics {
         data.put("time", getCurrentDateTime());
 
         return data.toJSONString();
+    }
+
+    private static void notiReceived(String receivedMessage) {
+        System.out.println("Broker: " + receivedMessage);
+    }
+
+    private static void sendToServer(OutputStream outStream, String message) throws IOException {
+        DataOutputStream datOutStream = new DataOutputStream(outStream);
+        datOutStream.writeBytes(message + '\n');
     }
 
     public static void main(String[] args) throws IOException {
@@ -78,19 +87,21 @@ public class Publisher implements Locations, Topics {
         try {
             Socket clientSocket = new Socket("127.0.0.1", PORT_NUMBER);
 
-            DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-            BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+            Scanner scanner = new Scanner(System.in);
+
+            InputStream inpStream = clientSocket.getInputStream();
+            BufferedReader bufferRead = new BufferedReader(new InputStreamReader(inpStream));
+            OutputStream outStream = clientSocket.getOutputStream();
+            DataOutputStream datOutStream = new DataOutputStream(outStream);
 
             // show topics list
             String listTopic = "Topics: \n" + ROOM_TEMP + '\n' + TV_SWITCH + '\n' + LIGHT_SWITCH + '\n' + VOLUME_RANGE + '\n' + AC_TEMP;
             System.out.println(listTopic);
 
-
             while (true) {
                 if (state.equals(SELECT_TOPIC)) {
                     System.out.print("Select a topic to push: ");
-                    selectedTopic = inFromUser.readLine();
+                    selectedTopic = scanner.nextLine();
 
                     if (selectedTopic.equals(ROOM_TEMP) || selectedTopic.equals(TV_SWITCH) || selectedTopic.equals(LIGHT_SWITCH) || selectedTopic.equals(VOLUME_RANGE) || selectedTopic.equals(AC_TEMP)) {
                         state = WAITING;
@@ -100,35 +111,35 @@ public class Publisher implements Locations, Topics {
                     }
                 } else if (state.equals(WAITING)) {
                     stringToServer = "PUBLISHER HELLO";
-                    outToServer.writeBytes(stringToServer + '\n');
+                    sendToServer(outStream, stringToServer);
                     System.out.println("Publisher (QUIT for exit): " + stringToServer);
-                    receivedFromServer = inFromServer.readLine();
+                    receivedFromServer = bufferRead.readLine();
 
                     if (receivedFromServer.equals("200 HELLO PUBLISHER")) {
-                        System.out.println("Broker: 200 HELLO PUBLISHER");
+                        notiReceived(receivedFromServer);
                         state = CONNECTED;
                     } else {
-                        System.out.println("Broker: Hello error");
+                        notiReceived("Hello error");
                         state = WAITING;
                     }
                 } else if (state.equals(CONNECTED)) {
                     stringToServer = "SEND";
-                    outToServer.writeBytes(stringToServer + '\n');
+                    sendToServer(outStream, stringToServer);
                     System.out.println("Publisher (QUIT for exit): " + stringToServer);
-                    receivedFromServer = inFromServer.readLine();
+                    receivedFromServer = bufferRead.readLine();
 
                     if (receivedFromServer.equals("210 SEND OK")) {
-                        System.out.println("Broker: 210 SEND OK");
+                        notiReceived(receivedFromServer);
                         state = SEND_DATA;
                     } else {
-                        System.out.println("Broker: Send error");
+                        notiReceived("Send error");
                         state = CONNECTED;
                     }
                 } else if (state.equals(SEND_DATA)) {
                     stringToServer = setDataForTopic(selectedTopic);
-                    outToServer.writeBytes(stringToServer + '\n');
+                    sendToServer(outStream, stringToServer);
                 } else {
-                    System.out.println("Invalid state");
+                    System.out.println("------------Invalid state-----------");
                     break;
                 }
             }
