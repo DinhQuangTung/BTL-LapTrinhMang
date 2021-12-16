@@ -49,7 +49,7 @@ public class Publisher implements Locations, Topics {
     }
 
     private static String getCurrentDateTime() {
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         Date date = new Date();
         return formatter.format(date);
     }
@@ -142,9 +142,8 @@ public class Publisher implements Locations, Topics {
                     stringToServer = setDataForTopic(selectedTopic);
                     sendToServer(outStream, stringToServer);
                     receivedFromServer = bufferRead.readLine();
-
+                    notiReceived(receivedFromServer);
                     if(receivedFromServer.equals("404 DATA ERROR")) {
-                        notiReceived(receivedFromServer);
                         continue;
                     }
                     TimeUnit.SECONDS.sleep(delay);
