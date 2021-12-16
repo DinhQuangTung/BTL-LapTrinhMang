@@ -5,14 +5,15 @@ import GlobalVariable.*;
 import java.io.*;
 import java.util.*;
 import java.net.*;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import java.text.SimpleDateFormat;
+import java.util.concurrent.TimeUnit;
 
 public class Publisher implements Locations, Topics {
     static int PORT_NUMBER = 9000;
+    static int delay = 10;
 
-    private static int randomData(String topic) {
+    private static String randomData(String topic) {
         Random rand = new Random();
         int min;
         int max;
@@ -29,7 +30,9 @@ public class Publisher implements Locations, Topics {
             max = 100;
         }
 
-        return rand.nextInt(max - min + 1) + min;
+        int intAns = rand.nextInt(max - min + 1) + min;
+
+        return Integer.toString(intAns);
     }
 
     private static String randomLocation() {
@@ -138,12 +141,21 @@ public class Publisher implements Locations, Topics {
                 } else if (state.equals(SEND_DATA)) {
                     stringToServer = setDataForTopic(selectedTopic);
                     sendToServer(outStream, stringToServer);
+                    receivedFromServer = bufferRead.readLine();
+
+                    if(receivedFromServer.equals("404 DATA ERROR")) {
+                        notiReceived(receivedFromServer);
+                        continue;
+                    }
+                    TimeUnit.SECONDS.sleep(delay);
                 } else {
                     System.out.println("------------Invalid state-----------");
                     break;
                 }
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
