@@ -75,9 +75,89 @@ class ConnectThread extends Thread {
         obj.put("value" , value) ;
         obj.put("time", time) ;
 
+        JSONParser jsonParser = new JSONParser();
+        JSONArray objArr = new JSONArray() ;
+        try (FileReader reader = new FileReader("./src/Broker/topic_data.json"))
+        {
+            //Read JSON file
+            Object objFile = jsonParser.parse(reader);
+            objArr = (JSONArray) objFile;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        int isAdd = 0 ;
+        for (int index = 0 ; index < objArr.size() ; ++index) {
+            JSONObject tmpObj = (JSONObject) objArr.get(index) ;
+            String nTopic = (String) tmpObj.get("topic") ;
+            String nLocation = (String) tmpObj.get("location") ;
+            String nSensor = (String) tmpObj.get("sensor") ;
+
+            if (nTopic.equals(topic) && nLocation.equals(location) && nSensor.equals(sensor)) {
+                tmpObj.put("value", value) ;
+                tmpObj.put("time",time) ;
+                isAdd = 1 ;
+                break;
+            }
+        }
+
+        if (isAdd != 1) {
+            objArr.add(obj) ;
+        }
+
+        try (FileWriter file = new FileWriter("./src/Broker/topic_data.json")) {
+            //We can write any JSONArray or JSONObject instance to the file
+            file.write(objArr.toJSONString());
+            file.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
+    public String requestData (String request) {
+        String [] words = request.split("-") ;
+        String topic = words[0] ;
+        String location = words[1] ;
+        String sensor = words[2] ;
+        String data = "" ;
+
+        JSONArray objArr = new JSONArray() ;
+        JSONParser jsonParser = new JSONParser();
+
+        try (FileReader reader = new FileReader("./src/Broker/topic_data.json"))
+        {
+            //Read JSON file
+            Object objFile = jsonParser.parse(reader);
+            objArr = (JSONArray) objFile;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        for (int index = 0 ; index < objArr.size() ; ++index) {
+            JSONObject tmpObj = (JSONObject) objArr.get(index) ;
+            String nTopic = (String) tmpObj.get("topic") ;
+            String nLocation = (String) tmpObj.get("location") ;
+            String nSensor = (String) tmpObj.get("sensor") ;
+
+            if (nTopic.equals(topic) && nLocation.equals(location) && nSensor.equals(sensor)) {
+                data = (String) tmpObj.toJSONString() ;
+                break;
+            }
+        }
+        return data ;
+    }
     public void run() {
         try {
 //            out = new DataOutputStream(clientSocket.getOutputStream());
@@ -89,6 +169,9 @@ class ConnectThread extends Thread {
                 String receive = in.readLine();
                 if (receive.equals("SUBSCRIBER HELLO")) {
                     out.writeBytes("200 HELLO SUBSCRIBER" + '\n');
+                    receive = in.readLine() ;
+                    String data = requestData(receive) ;
+                    out.writeBytes(data + '\n');
                 } else if (receive.equals("PUBLISHER HELLO")) {
                     out.writeBytes("200 HELLO PUBLISHER" + '\n');
                 } else if (receive.equals("SEND")) {
