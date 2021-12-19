@@ -160,34 +160,38 @@ class ConnectThread extends Thread {
     }
     public void run() {
         try {
-//            out = new DataOutputStream(clientSocket.getOutputStream());
-//            in = new DataInputStream(clientSocket.getInputStream());
             DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
+            String state = "waiting" ;
             while (true) {
                 String receive = in.readLine();
-                if (receive.equals("SUBSCRIBER HELLO")) {
+                if (receive.equals("SUBSCRIBER HELLO") && state.equals("waiting")) {
                     out.writeBytes("200 HELLO SUBSCRIBER" + '\n');
+                    state = "requesting" ;
                     receive = in.readLine() ;
                     String data = requestData(receive) ;
                     out.writeBytes(data + '\n');
-                } else if (receive.equals("PUBLISHER HELLO")) {
-                    out.writeBytes("200 HELLO PUBLISHER" + '\n');
-                } else if (receive.equals("SEND")) {
-                    out.writeBytes("210 SEND OK" + '\n');
-//                    receive = in.readLine();
-//                    if (!checkData(receive)) {
-//                        out.writeBytes("404 DATA ERROR" + '\n');
-//                    } else {
-//                        out.writeBytes("220 DATA OK" + '\n');
-//                        String data = receive ;
-//                        addDataToJson(data) ;
-//                    }
+
                 }
-                else if (checkData(receive)) {
-                    out.writeBytes("220 DATA OK" + '\n') ;
-                    addDataToJson(receive) ;
+                else if (state.equals("requesting")) {
+                    String data = requestData(receive) ;
+                    out.writeBytes(data + '\n');
+                }
+                else if (receive.equals("PUBLISHER HELLO") && state.equals("waiting")) {
+                    out.writeBytes("200 HELLO PUBLISHER" + '\n');
+                } else if (receive.equals("SEND") && state.equals("waiting")) {
+                    out.writeBytes("210 SEND OK" + '\n');
+                    state = "sending" ;
+                }
+                else if (state.equals("sending")) {
+                    if (checkData(receive)) {
+                        out.writeBytes("220 DATA OK" + '\n') ;
+                        addDataToJson(receive) ;
+                    }
+                    else {
+                        out.writeBytes("404 DATA ERROR" + '\n');
+                        state = "waiting" ;
+                    }
                 }
                 else {
                     out.writeBytes("Wrong Command" + '\n');
@@ -219,6 +223,15 @@ public class Broker implements Locations, Topics {
         }
     }
     public static void main(String[] args) throws Exception {
+        try (FileWriter file = new FileWriter("./src/Broker/topic_data.json")) {
+            //create new json file
+            file.write("[]");
+            file.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         Broker broker = new Broker();
         broker.getServer(9000);
     }
