@@ -2,9 +2,12 @@ package Subscriber;
 
 import GlobalVariable.Locations;
 import GlobalVariable.Topics;
-import org.json.*;
+import org.json.simple.*;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.json.simple.JSONArray ;
 
 import java.io.*;
 import java.net.Socket;
@@ -57,19 +60,29 @@ public class Subscriber implements Locations, Topics {
         datOutStream.writeBytes(message + '\n');
     }
 
+//    public static boolean isJSONValid(String test) {
+//        try {
+//            new JSONObject(test);
+//        } catch (JSONException ex) {
+//            // edited, to include @Arthur's comment
+//            // e.g. in case JSONArray is valid as well...
+//            try {
+//                new JSONArray(test);
+//            } catch (JSONException ex1) {
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
+
     public static boolean isJSONValid(String test) {
         try {
-            new JSONObject(test);
-        } catch (JSONException ex) {
-            // edited, to include @Arthur's comment
-            // e.g. in case JSONArray is valid as well...
-            try {
-                new JSONArray(test);
-            } catch (JSONException ex1) {
-                return false;
-            }
+            Object obj = new JSONParser().parse(test);
+
+            return (obj instanceof JSONObject || obj instanceof JSONArray);
+        } catch (ParseException e) {
+            return false;
         }
-        return true;
     }
 
     public static void JsonDecode(String jsonStr) {
