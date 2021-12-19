@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Publisher implements Locations, Topics {
     static int PORT_NUMBER = 9000;
-    static int delay = 10;
+    static int delay = 2;
 
     private static String randomData(String topic) {
         Random rand = new Random();
